@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>猪周期六信号周度观测台</title>
+<style>
+:root{
+  --bg:#f5f6f4; --panel:#ffffff; --ink:#171a18; --ink2:#5b635e; --ink3:#8b938d;
+  --line:#e3e6e2; --teal:#0f766e; --teal-bg:#e6f2ef;
+  --amber:#b45309; --amber-bg:#fbf0e2;
+  --red:#b3261e; --red-bg:#fbeae8;
+  --grey:#6b7280; --grey-bg:#f0f1ef;
+  --shadow:0 1px 2px rgba(20,30,24,.05),0 8px 24px -12px rgba(20,30,24,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Noto Sans SC",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:14px; line-height:1.62; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 64px}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em}
+.mono{font-family:"SF Mono",ui-monospace,Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums}
+
+/* header */
+header{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;margin-bottom:6px}
+.brand h1{font-size:24px;line-height:1.25}
+.brand p{margin:6px 0 0;color:var(--ink2);font-size:13px}
+.hbadges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--line);background:#fff}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--grey)}
+.dot.live{background:var(--teal)}
+.dot.stale{background:var(--amber)}
+
+.note{margin:14px 0 22px;padding:10px 14px;border-radius:10px;background:#fdf8ee;border:1px solid #efdfc2;color:#7a5410;font-size:12.5px}
+.note b{color:#5c3f07}
+
+/* overview */
+.overview{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:14px;margin-bottom:18px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.gauge{padding:18px 20px;display:flex;gap:16px;align-items:center}
+.gauge svg{flex:0 0 auto}
+.gauge .txt h3{font-size:13px;color:var(--ink2);font-weight:500}
+.gauge .txt .big{font-size:26px;font-weight:650;line-height:1.1;margin-top:2px}
+.gauge .txt small{display:block;color:var(--ink3);font-size:11.5px;margin-top:4px}
+.ladder{padding:16px 18px}
+.ladder h3{font-size:13px;color:var(--ink2);font-weight:500;margin-bottom:10px}
+.steps{display:flex;gap:0;align-items:stretch}
+.step{flex:1;text-align:center;padding:8px 4px;border-radius:8px;font-size:11.5px;color:var(--ink3);border:1px dashed var(--line);margin-right:6px}
+.step:last-child{margin-right:0}
+.step b{display:block;font-size:13px;color:var(--ink2);font-weight:600;margin-top:2px}
+.step.on{border:1px solid var(--teal);background:var(--teal-bg);color:#0b5c55}
+.step.on b{color:#0b5c55}
+.step.cur{box-shadow:0 0 0 3px rgba(15,118,110,.12)}
+.ladder .advice{margin-top:12px;font-size:13px}
+.ladder .advice b{color:var(--teal)}
+
+/* chart */
+.chart{padding:16px 20px 8px;margin-bottom:18px}
+.chart .hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.chart .hd h3{font-size:14px}
+.chart .hd span{font-size:11.5px;color:var(--ink3)}
+.chart svg{width:100%;height:auto;display:block}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 18px 14px;position:relative;overflow:hidden}
+.card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--grey)}
+.card.st-ok:before{background:var(--teal)}
+.card.st-warn:before{background:var(--amber)}
+.card.st-danger:before{background:var(--red)}
+.card .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.card .idx{font-size:11.5px;color:var(--ink3);letter-spacing:.08em}
+.card .name{font-size:15px;font-weight:600;margin-top:2px}
+.pill{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.p-ok{background:var(--teal-bg);color:#0b5c55}
+.p-warn{background:var(--amber-bg);color:#8a4206}
+.p-danger{background:var(--red-bg);color:#8e1e18}
+.p-idle{background:var(--grey-bg);color:var(--grey)}
+.val{display:flex;align-items:baseline;gap:6px;margin:10px 0 2px}
+.val .n{font-size:30px;font-weight:650;letter-spacing:-.02em;line-height:1.1}
+.val .u{font-size:12px;color:var(--ink3)}
+.sub{margin-top:2px;font-size:12px;color:var(--ink2)}
+.card ul{margin:10px 0 0;padding:0;list-style:none;border-top:1px dashed var(--line);padding-top:9px}
+.card li{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:2px 0;color:var(--ink2)}
+.card li .v{font-weight:600;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+.card li .mk{font-size:11px;margin-left:5px}
+.mk.y{color:var(--teal)} .mk.n{color:var(--ink3)}
+.card .foot{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:10px}
+.card .foot .say{font-size:11.5px;color:var(--ink3);max-width:62%}
+.spark{flex:0 0 auto}
+
+/* matrix + history tables */
+.sec{margin-top:26px}
+.sec-hd{display:flex;justify-content:space-between;align-items:baseline;margin:0 3px 10px}
+.sec-hd h2{font-size:16px}
+.sec-hd span{font-size:12px;color:var(--ink3)}
+.tbl-wrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:640px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:#fafbf9;font-weight:600;color:var(--ink2);font-size:12px;position:sticky;top:0}
+td.num{font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:600}
+.t-ok{background:var(--teal-bg);color:#0b5c55}
+.t-warn{background:var(--amber-bg);color:#8a4206}
+.t-danger{background:var(--red-bg);color:#8e1e18}
+.t-idle{background:var(--grey-bg);color:var(--grey)}
+
+/* form */
+.form-panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px}
+.fgroups{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 22px}
+.fgroup h4{margin:0 0 8px;font-size:12px;color:var(--ink2);font-weight:600;letter-spacing:.04em}
+.field{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.field label{flex:1;font-size:12px;color:var(--ink2)}
+.field input{width:92px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;text-align:right;background:#fcfdfc;font-variant-numeric:tabular-nums}
+.field input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,118,110,.1)}
+.field .un{font-size:11px;color:var(--ink3);width:52px;text-align:left}
+.actions{display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap}
+button{font:inherit;font-size:13px;padding:8px 16px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink)}
+button.primary{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+button.primary:hover{background:#0b5f59}
+button:hover{border-color:#cfd4ce}
+button.ghost{color:var(--ink2)}
+.hint{font-size:11.5px;color:var(--ink3)}
+
+/* 一键更新 */
+.updatebar{display:flex;align-items:center;gap:12px;margin:0 0 16px;flex-wrap:wrap}
+.upanel{margin-bottom:18px}
+.upanel textarea{width:100%;min-height:132px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:12.5px;line-height:1.6;resize:vertical;background:#fcfdfc}
+.upanel textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,118,110,.1)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{font-size:11.5px;padding:3px 9px;border-radius:7px;background:var(--grey-bg);color:var(--ink2)}
+.chip.hit{background:var(--teal-bg);color:#0b5c55;font-weight:600}
+.srclinks{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:12px}
+.srclinks a{color:var(--teal);text-decoration:none}
+.srclinks a:hover{text-decoration:underline}
+
+footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:var(--ink3);font-size:11.5px}
+footer p{margin:4px 0}
+footer b{color:var(--ink2);font-weight:600}
+
+@media (max-width:900px){
+  .overview{grid-template-columns:1fr}
+  .grid{grid-template-columns:1fr}
+  .fgroups{grid-template-columns:1fr 1fr}
+}
+@media (max-width:600px){
+  .wrap{padding:18px 14px 48px}
+  .brand h1{font-size:20px}
+  .fgroups{grid-template-columns:1fr}
+  .val .n{font-size:26px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <h1>猪周期六信号周度观测台</h1>
+    <p id="subline"></p>
+  </div>
+  <div class="hbadges" id="hbadges"></div>
+</header>
+
+<div class="note" id="note"></div>
+
+<div class="updatebar">
+  <button class="primary" id="btnupdate">⚡ 一键更新本周</button>
+  <span class="hint">把农业农村部周报或行情页文字粘进来，自动识别 18 项指标，不用手填</span>
+</div>
+
+<section class="panel form-panel upanel" id="updatepanel" style="display:none">
+  <h3 style="font-size:14px;margin-bottom:8px">粘贴行情文字，自动识别</h3>
+  <textarea id="pastetext" placeholder="示例：据农业农村部监测，上周全国活猪价格为9.81元/公斤，环比跌3.0%；仔猪价格21.5元/公斤，玉米价格2.36元/公斤……"></textarea>
+  <div class="actions">
+    <button class="primary" id="btnparse">识别并填入下方表单</button>
+    <button class="ghost" id="btnfilldemo">填入示例试试</button>
+    <span class="hint" id="parsehint"></span>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="srclinks">
+    <span style="color:var(--ink3)">数据源直达：</span>
+    <a href="http://www.moa.gov.cn/" target="_blank" rel="noopener">农业农村部</a>
+    <a href="http://www.dce.com.cn/" target="_blank" rel="noopener">大商所生猪期货</a>
+    <a href="https://irm.cninfo.com.cn/ircs/company/companyDetail?stockcode=002714&orgId=9900022995" target="_blank" rel="noopener">牧原互动易（月度成本）</a>
+    <a href="https://www.dxumu.com/" target="_blank" rel="noopener">大畜牧日报</a>
+  </div>
+  <p class="hint" style="margin:10px 0 0">识别后请下拉检查「录入本周数据」里的数值，再点「保存并重算」。也可以直接对豆包说「现在更新猪周期网站」，立即执行自动更新任务。</p>
+</section>
+
+<section class="overview">
+  <div class="panel gauge" id="g1"></div>
+  <div class="panel gauge" id="g2"></div>
+  <div class="panel ladder" id="ladder"></div>
+</section>
+
+<section class="panel chart">
+  <div class="hd">
+    <h3>活猪价 vs 牧原现金成本</h3>
+    <span>两条线交叉以上的区间 = 全行业最优成本方也在现金亏损</span>
+  </div>
+  <svg id="mainchart" viewBox="0 0 1000 260" preserveAspectRatio="xMidYMid meet"></svg>
+</section>
+
+<section class="grid" id="cards"></section>
+
+<div class="sec">
+  <div class="sec-hd">
+    <h2>信号矩阵（本周读数）</h2>
+    <span>阈值来自本文设定的观察规则，非行业统一标准</span>
+  </div>
+  <div class="tbl-wrap"><table id="matrix"></table></div>
+</div>
+
+<div class="sec">
+  <div class="sec-hd">
+    <h2>录入本周数据</h2>
+    <span>规则：每周一录上周实测值 → 保存后全部指标即时重算</span>
+  </div>
+  <div class="form-panel">
+    <div class="fgroups" id="form"></div>
+    <div class="actions">
+      <button class="primary" id="btnsave">保存并重算</button>
+      <button class="ghost" id="btnreset">回到官方数据</button>
+      <button class="ghost" id="btncopy">复制本周结论</button>
+      <span class="hint" id="savedhint"></span>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-hd">
+    <h2>周度历史</h2>
+    <span>官方自动更新序列 · 本机手动录入另存于浏览器</span>
+  </div>
+  <div class="tbl-wrap"><table id="history"></table></div>
+  <div class="actions">
+    <button class="ghost" id="btnexport">导出 CSV</button>
+    <button class="ghost" id="btnclear">清空本地记录</button>
+  </div>
+</div>
+
+<footer>
+  <p><b>口径</b>：活猪价＝农业农村部 500 个县集贸市场活猪（中等）周度均价，元/公斤；玉米价＝农业农村部 CASDE 年度均价折月；仔猪价＝7kg 仔猪；淘汰母猪折价＝淘汰母猪价 ÷ 活猪价。能繁存栏用国家统计局季度末数据，期内按月度环比外推；PSY 取行业公开的规模场均值。</p>
+  <p><b>牧原现金成本</b>：完全成本 − 折旧摊销。折旧摊销等非现金成本约占完全成本 10%（公司披露口径），故现金成本 ≈ 完全成本 × 0.90。完全成本取公司月度披露值。</p>
+  <p><b>头部财务</b>：季度亏损＝A 股主要上市猪企归母净利合计；资本开支同比＝现金流量表「购建固定资产等支付的现金」同比；现金跑道＝货币资金 ÷ 月均经营现金净流出。</p>
+  <p><b>说明</b>：本页为个人研究用的观测台账，不构成投资建议。历史序列中标注「示例」的周为按月度均价插值补全，请以每周录入的实测值为准。</p>
+</footer>
+
+</div>
+
+<script>
+/* ============ 1. 数据结构 ============ */
+// 每周一条：单位见 key 表
+const FIELDS = [
+  {k:'pig',    label:'活猪价',        unit:'元/kg', step:0.01, g:'价格与成本'},
+  {k:'corn',   label:'玉米价',        unit:'元/kg', step:0.01, g:'价格与成本'},
+  {k:'piglet', label:'仔猪价(7kg)',   unit:'元/kg', step:0.1,  g:'价格与成本'},
+  {k:'cull',   label:'淘汰母猪价',    unit:'元/kg', step:0.1,  g:'价格与成本'},
+  {k:'sow',    label:'能繁存栏',      unit:'万头',  step:1,    g:'产能'},
+  {k:'psy',    label:'行业PSY',       unit:'头',    step:0.1,  g:'产能'},
+  {k:'sowMom', label:'能繁月环比',    unit:'%',     step:0.01, g:'产能'},
+  {k:'sowYoy', label:'能繁同比',      unit:'%',     step:0.1,  g:'产能'},
+  {k:'fnear',  label:'期货近月',      unit:'元/吨', step:10,   g:'期货与股票'},
+  {k:'ffar',   label:'期货远月',      unit:'元/吨', step:10,   g:'期货与股票'},
+  {k:'foi',    label:'远月持仓',      unit:'手',    step:100,  g:'期货与股票'},
+  {k:'eq',     label:'养殖股超额',    unit:'%',     step:0.1,  g:'期货与股票'},
+  {k:'loss',   label:'上市猪企季度亏损', unit:'亿元', step:1,  g:'头部财务'},
+  {k:'headMom',label:'头部能繁环比',  unit:'%',     step:0.1,  g:'头部财务'},
+  {k:'capex',  label:'资本开支同比',  unit:'%',     step:1,    g:'头部财务'},
+  {k:'runway', label:'头部现金跑道',  unit:'月',    step:0.5,  g:'头部财务'},
+  {k:'cost',   label:'牧原完全成本',  unit:'元/kg', step:0.1,  g:'牧原成本'},
+  {k:'dep',    label:'折旧摊销占比',  unit:'%',     step:0.5,  g:'牧原成本'}
+];
+
+const HEAD_COST = 13.0;     // 行业平均完全成本，元/kg
+const SOW_NORMAL = 3750;    // 新口径正常保有量，万头
+const SOW_OLD = 4100;       // 2021 版口径
+const BASELINE_PSY = 20;    // 折算基准
+
+/* 示例序列：按月度均价插值补全，最后一行为实测口径（11/9-15 活猪 9.81） */
+const SEED = [
+  {d:'2026-08-24',pig:12.18,corn:2.36,piglet:24.8,cull:8.6, sow:3912,psy:22.7,sowMom:-0.28,sowYoy:-2.9, fnear:11720,ffar:12140,foi:6820,eq:-3.2, loss:-70,headMom:-1.6,capex:-18,runway:11, cost:11.9,dep:10.0},
+  {d:'2026-09-07',pig:12.05,corn:2.36,piglet:24.4,cull:8.5, sow:3902,psy:22.7,sowMom:-0.26,sowYoy:-3.1, fnear:11640,ffar:12080,foi:6610,eq:-4.1, loss:-82,headMom:-2.0,capex:-22,runway:10.5,cost:11.8,dep:10.0},
+  {d:'2026-09-14',pig:12.01,corn:2.36,piglet:24.1,cull:8.5, sow:3896,psy:22.7,sowMom:-0.25,sowYoy:-3.3, fnear:11600,ffar:12020,foi:6480,eq:-4.8, loss:-88,headMom:-2.4,capex:-24,runway:10.2,cost:11.7,dep:10.0},
+  {d:'2026-09-21',pig:11.98,corn:2.36,piglet:23.9,cull:8.4, sow:3890,psy:22.8,sowMom:-0.25,sowYoy:-3.4, fnear:11540,ffar:11940,foi:6240,eq:-5.3, loss:-95,headMom:-2.9,capex:-27,runway:10.0,cost:11.6,dep:10.0},
+  {d:'2026-09-28',pig:11.92,corn:2.36,piglet:23.4,cull:8.3, sow:3884,psy:22.8,sowMom:-0.24,sowYoy:-3.5, fnear:11480,ffar:11860,foi:6010,eq:-5.9, loss:-95,headMom:-3.3,capex:-29,runway:9.8, cost:11.5,dep:10.0},
+  {d:'2026-10-05',pig:11.74,corn:2.36,piglet:23.0,cull:8.2, sow:3878,psy:22.8,sowMom:-0.24,sowYoy:-3.5, fnear:11380,ffar:11760,foi:5760,eq:-6.2, loss:-95,headMom:-3.6,capex:-31,runway:9.6, cost:11.5,dep:10.0},
+  {d:'2026-10-12',pig:11.60,corn:2.36,piglet:22.7,cull:8.2, sow:3873,psy:22.8,sowMom:-0.23,sowYoy:-3.6, fnear:11260,ffar:11640,foi:5480,eq:-6.6, loss:-95,headMom:-3.9,capex:-32,runway:9.5, cost:11.4,dep:10.0},
+  {d:'2026-10-19',pig:11.45,corn:2.36,piglet:22.5,cull:8.1, sow:3868,psy:22.8,sowMom:-0.22,sowYoy:-3.6, fnear:11160,ffar:11560,foi:5210,eq:-7.0, loss:-95,headMom:-4.2,capex:-33,runway:9.4, cost:11.4,dep:10.0},
+  {d:'2026-10-26',pig:11.16,corn:2.36,piglet:22.1,cull:8.0, sow:3863,psy:22.8,sowMom:-0.22,sowYoy:-3.7, fnear:11060,ffar:11480,foi:4980,eq:-7.4, loss:-95,headMom:-4.4,capex:-34,runway:9.3, cost:11.4,dep:10.0},
+  {d:'2026-11-02',pig:10.11,corn:2.36,piglet:21.8,cull:7.4, sow:3858,psy:22.8,sowMom:-0.21,sowYoy:-3.7, fnear:10920,ffar:11360,foi:4760,eq:-7.8, loss:-95,headMom:-4.5,capex:-35,runway:9.2, cost:11.4,dep:10.0},
+  {d:'2026-11-09',pig:9.81, corn:2.36,piglet:21.5,cull:7.1, sow:3854,psy:22.8,sowMom:-0.20,sowYoy:-3.8, fnear:10840,ffar:11300,foi:4810,eq:-8.0, loss:-95,headMom:-4.5,capex:-35,runway:9.1, cost:11.4,dep:10.0, note:'活猪为农业农村部500县实测，其余沿用月度值'},
+  {d:'2026-11-16',pig:9.95, corn:2.36,piglet:21.9,cull:7.2, sow:3850,psy:22.8,sowMom:-0.20,sowYoy:-3.8, fnear:10880,ffar:11360,foi:4920,eq:-7.6, loss:-95,headMom:-4.5,capex:-35,runway:9.1, cost:11.4,dep:10.0, note:'占位，待自动更新替换'}
+];
+
+const STORE_KEY = 'pig6_signals_v1';
+const AUTO_UPDATED = '2026-11-22';   // 定时任务每次重发时改写此行
+let manualMode = false;
+let weeks = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      const o = JSON.parse(raw);
+      if(o && o.manual && o.weeks && o.weeks.length){ manualMode = true; return o.weeks; }
+      if(o && o.length){ manualMode = true; return o; }   // 兼容旧版手动数据
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(SEED));
+}
+function save(){
+  manualMode = true;
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify({manual:true, weeks:weeks})); }catch(e){}
+}
+
+/* ============ 2. 指标计算 ============ */
+function num(v){ return (v===""||v===null||isNaN(v)) ? null : Number(v); }
+
+function compute(w, i){
+  const prev = i>0 ? weeks[i-1] : null;
+  // ① 有效存栏 = 能繁 × PSY / 20
+  const eff = w.sow * w.psy / BASELINE_PSY;
+  const effGap = (eff / SOW_NORMAL - 1) * 100;
+
+  // ② 存栏与淘汰
+  const disc = w.cull / w.pig * 100;
+  const pigletMin = Math.min.apply(null, weeks.slice(Math.max(0,i-3), i+1).map(x=>x.piglet));
+  const pigletStop = (i>=3) && (w.piglet > pigletMin + 1e-9 || w.piglet >= weeks[i-3].piglet);
+  const s2items = [
+    {t:'能繁月环比 < -1%', v:(w.sowMom<=-1?'达标':'未达'), ok:(w.sowMom<=-1), vv:w.sowMom.toFixed(2)+'%'},
+    {t:'能繁同比 < -8%',   v:(w.sowYoy<=-8?'达标':'未达'), ok:(w.sowYoy<=-8), vv:w.sowYoy.toFixed(1)+'%'},
+    {t:'仔猪价止跌',       v:(pigletStop?'已止跌':'仍在跌'), ok:pigletStop, vv:w.piglet.toFixed(1)},
+    {t:'淘汰母猪折价 < 60%',v:(disc<60?'达标':'未达'), ok:(disc<60), vv:disc.toFixed(0)+'%'}
+  ];
+
+  // ③ 猪粮比
+  const pg = w.pig / w.corn;
+
+  // ④ 头部出清
+  const s4items = [
+    {t:'季度亏损 ≤ -80 亿', v:(w.loss<=-80?'达标':'未达'), ok:(w.loss<=-80), vv:w.loss.toFixed(0)+'亿'},
+    {t:'头部能繁环比 ≤ -2%',v:(w.headMom<=-2?'达标':'未达'), ok:(w.headMom<=-2), vv:w.headMom.toFixed(1)+'%'},
+    {t:'资本开支同比 ≤ -30%',v:(w.capex<=-30?'达标':'未达'), ok:(w.capex<=-30), vv:w.capex.toFixed(0)+'%'},
+    {t:'现金跑道 < 6 个月', v:(w.runway<6?'达标':'未达'), ok:(w.runway<6), vv:w.runway.toFixed(1)+'月'}
+  ];
+  const s4score = s4items.filter(x=>x.ok).length;
+
+  // ⑤ 期货与股票
+  const basis = w.ffar - w.fnear;
+  const s5items = [
+    {t:'远-近月升水 ≥ 800', v:(basis>=800?'达标':'未达'), ok:(basis>=800), vv:(basis>0?'+':'')+basis.toFixed(0)+'元/吨'},
+    {t:'远月 ≥ 14000 元/吨', v:(w.ffar>=14000?'达标':'未达'), ok:(w.ffar>=14000), vv:w.ffar.toFixed(0)},
+    {t:'远月持仓 ≥ 5000 手', v:(w.foi>=5000?'达标':'未达'), ok:(w.foi>=5000), vv:w.foi.toFixed(0)},
+    {t:'养殖股超额 ≥ +15%', v:(w.eq>=15?'达标':'未达'), ok:(w.eq>=15), vv:(w.eq>0?'+':'')+w.eq.toFixed(1)+'%'}
+  ];
+
+  // ⑥ 牧原现金成本 / 猪价
+  const cash = w.cost * (1 - w.dep/100);
+  const cr = cash / w.pig;
+
+  return {prev, eff, effGap, disc, pigletStop, s2items, pg, s4items, s4score, basis, s5items, cash, cr};
+}
+
+/* ============ 3. 状态判定 ============ */
+function stateS1(c){
+  if(c.eff < SOW_NORMAL) return {cls:'ok', txt:'有效存栏已低于保有量'};
+  if(c.effGap < 8) return {cls:'warn', txt:'接近阈值'};
+  return {cls:'idle', txt:'产能仍过剩'};
+}
+function stateS2(c){
+  const n = c.s2items.filter(x=>x.ok).length;
+  if(n>=2) return {cls:'ok', txt:'去化确认 '+n+'/4'};
+  if(n===1) return {cls:'warn', txt:'部分成立 1/4'};
+  return {cls:'idle', txt:'未启动 0/4'};
+}
+function stateS3(c){
+  if(c.pg < 5) return {cls:'danger', txt:'一级预警区间'};
+  if(c.pg < 6) return {cls:'warn', txt:'深度亏损区间'};
+  if(c.pg < 7) return {cls:'warn', txt:'亏损区间'};
+  return {cls:'ok', txt:'盈亏平衡以上'};
+}
+function stateS4(c){
+  if(c.s4score>=3) return {cls:'ok', txt:'真出清 '+c.s4score+'/4'};
+  if(c.s4score===2) return {cls:'ok', txt:'出清启动 2/4'};
+  if(c.s4score===1) return {cls:'warn', txt:'单点成立 1/4'};
+  return {cls:'idle', txt:'未见出清 0/4'};
+}
+function stateS5(c){
+  const n = c.s5items.filter(x=>x.ok).length;
+  const basisOk = c.s5items[0].ok && c.s5items[1].ok;
+  if(basisOk || c.s5items[3].ok) return {cls:'ok', txt:'右侧确认'};
+  if(n===1) return {cls:'warn', txt:'单点成立 1/4'};
+  return {cls:'idle', txt:'市场不信 0/4'};
+}
+function stateS6(c){
+  if(c.cr > 1.10) return {cls:'danger', txt:'深度现金亏损'};
+  if(c.cr > 1.00) return {cls:'danger', txt:'现金亏损'};
+  if(c.cr > 0.90) return {cls:'warn', txt:'现金薄利'};
+  return {cls:'ok', txt:'现金盈利'};
+}
+
+/* ============ 4. 渲染工具 ============ */
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function spark(vals, color, w, h){
+  if(vals.length<2) return '';
+  const mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+  const pad = (mx-mn) || 1;
+  const pts = vals.map(function(v,i){
+    const x = 2 + i*( (w-6) / (vals.length-1) );
+    const y = 2 + (h-6) * (1 - (v-mn)/pad);
+    return x.toFixed(1)+','+y.toFixed(1);
+  }).join(' ');
+  return '<svg class="spark" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'">'
+    + '<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="1.6" stroke-linejoin="round"/>'
+    + '<circle cx="'+pts.split(' ').pop().split(',')[0]+'" cy="'+pts.split(' ').pop().split(',')[1]+'" r="2.4" fill="'+color+'"/>'
+    + '</svg>';
+}
+
+function donut(pct, color){
+  const r = 34, C = 2*Math.PI*r;
+  const d = Math.max(0, Math.min(1, pct))*C;
+  return '<svg width="86" height="86" viewBox="0 0 86 86">'
+   + '<circle cx="43" cy="43" r="'+r+'" fill="none" stroke="#eceeeb" stroke-width="9"/>'
+   + '<circle cx="43" cy="43" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+d.toFixed(1)+' '+(C-d).toFixed(1)+'" transform="rotate(-90 43 43)"/>'
+   + '</svg>';
+}
+
+/* ============ 5. 主渲染 ============ */
+function render(){
+  const last = weeks[weeks.length-1];
+  const idx = weeks.length-1;
+  const c = compute(last, idx);
+
+  /* 顶部 */
+  document.getElementById('subline').textContent =
+    '本周：' + last.d + ' · 共 ' + weeks.length + ' 周记录';
+  const staleDays = Math.floor((Date.now() - new Date(last.d+'T00:00:00').getTime())/86400000);
+  const stale = staleDays > 7;
+  document.getElementById('hbadges').innerHTML =
+    '<span class="badge"><i class="dot '+(stale?'stale':'live')+'"></i>'+(stale?('已 '+staleDays+' 天未更新'):'数据在上周内')+'</span>'
+  + '<span class="badge">活猪 <b class="mono">'+last.pig.toFixed(2)+'</b> 元/kg</span>'
+  + '<span class="badge">牧原现金成本 <b class="mono">'+c.cash.toFixed(2)+'</b></span>';
+
+  document.getElementById('note').innerHTML =
+    (manualMode
+      ? '<b>当前为本机手动数据</b>：你在本机保存过录入值，官方自动更新不会覆盖它。点下方「清空本地记录」即可回到自动更新序列。<br>'
+      : '<b>自动更新已开启</b>：每周二 10:20 由定时任务抓取上周官方数据并重发本页，网址不变。最近更新 <b>'+AUTO_UPDATED+'</b>。<br>')
+  + '<b>口径提示</b>：活猪实测锚点为 <b>2026-11-09~11-15 全国活猪 9.81 元/公斤</b>（农业农村部 500 县集贸市场，环比 −3.0%）；'
+  + '历史其余各周为示例插值，仅供把趋势跑通。能繁存栏为月度/季度披露、牧原成本为月度披露、头部财报为季度披露，未出新值时沿用上一期并在历史表备注。';
+
+  /* 两个仪表 */
+  const s1s=stateS1(c), s2s=stateS2(c), s3s=stateS3(c), s4s=stateS4(c), s5s=stateS5(c), s6s=stateS6(c);
+  const rightN = [s1s,s2s,s4s,s5s].filter(function(s){return s.cls==='ok';}).length;
+  const deepN  = [s3s,s6s].filter(function(s){return s.cls==='danger';}).length;
+
+  document.getElementById('g1').innerHTML =
+    donut(rightN/4, rightN>=3?'#0f766e':(rightN>=1?'#b45309':'#9aa39c'))
+    + '<div class="txt"><h3>右侧确认进度</h3><div class="big mono">'+rightN+'<span style="font-size:15px;color:#8b938d"> / 4</span></div>'
+    + '<small>有效存栏 · 去化确认 · 出清 · 期货股票</small></div>';
+
+  document.getElementById('g2').innerHTML =
+    donut(deepN/2, deepN>=2?'#b3261e':'#b45309')
+    + '<div class="txt"><h3>底部深度</h3><div class="big mono">'+deepN+'<span style="font-size:15px;color:#8b938d"> / 2</span></div>'
+    + '<small>猪粮比破 5 · 现金成本高于猪价</small></div>';
+
+  /* 仓位阶梯 */
+  const stage = s2s.cls==='ok' ? (s4s.cls==='ok' ? (s5s.cls==='ok'?3:2) : 1) : 0;
+  const steps = ['观察','试仓 20–30%','加仓 50–60%','右侧加满'];
+  document.getElementById('ladder').innerHTML =
+    '<h3>仓位阶梯（串联确认，不跳档）</h3><div class="steps">'
+    + steps.map(function(s,i){
+        return '<div class="step '+(i<=stage?'on':'')+' '+(i===stage?'cur':'')+'"><span>'+['①','②','③','④'][i]+'</span><b>'+s+'</b></div>';
+      }).join('')
+    + '</div><div class="advice">当前建议：<b>'+steps[stage]+'</b>。'
+    + (stage===0 ? '去化信号 0/4，价格还在左侧，只做记录不建仓。' : '按已通过的最低一档执行。')
+    + (s4s.cls==='ok'&&stage<2 ? ' 注意：企业端已出现真出清（'+c.s4score+'/4），但价格与情绪信号未跟上，不能单凭财报抢跑。' : '')
+    + '</div>';
+
+  /* 主图 */
+  document.getElementById('mainchart').innerHTML = mainChart();
+
+  /* 卡片 */
+  const cards = [
+    {
+      i:'信号 ①', n:'有效存栏', s:s1s,
+      value:c.eff.toFixed(0), unit:'万头（PSY 折算）',
+      sub:'= 能繁 '+last.sow.toFixed(0)+' × PSY '+last.psy.toFixed(1)+' / 20',
+      items:[
+        {t:'新口径保有量', vv:SOW_NORMAL+' 万头'},
+        {t:'距保有量', vv:(c.effGap>0?'+':'')+c.effGap.toFixed(1)+'%', ok:c.effGap<=0},
+        {t:'触发条件', vv:'连续 2 月 < 3750'}
+      ],
+      say:'存栏降了不等于猪少了。PSY 涨上去，同样 3850 万头母猪能多产一成的猪。',
+      series: weeks.map(function(w,i){ return w.sow*w.psy/20; }), color:'#6b7280'
+    },
+    {
+      i:'信号 ②', n:'存栏与淘汰', s:s2s,
+      value:last.sowMom.toFixed(2), unit:'% 月环比',
+      sub:'同比 '+last.sowYoy.toFixed(1)+'% · 折价 '+c.disc.toFixed(0)+'% · 仔猪 '+last.piglet.toFixed(1),
+      items:c.s2items.map(function(x){ return {t:x.t, vv:x.vv, ok:x.ok}; }),
+      say:'看的是去化速度，不是总量。半年只减几十万头，等于没动。',
+      series: weeks.map(function(w){ return w.sow; }), color:'#8b938d'
+    },
+    {
+      i:'信号 ③', n:'猪粮比', s:s3s,
+      value:c.pg.toFixed(2), unit:': 1',
+      sub:'活猪 '+last.pig.toFixed(2)+' ÷ 玉米 '+last.corn.toFixed(2),
+      items:[
+        {t:'盈亏平衡', vv:'7 : 1'},
+        {t:'过度下跌一级预警', vv:'5 : 1'},
+        {t:'当前所处', vv:c.pg<5?'一级预警下':(c.pg<7?'亏损区':'平衡上'), ok:c.pg>=7}
+      ],
+      say:'这是止血带，不是发动机。收储收的是肉，母猪一头没少。',
+      series: weeks.map(function(w){ return w.pig/w.corn; }), color:'#b3261e'
+    },
+    {
+      i:'信号 ④', n:'头部出清', s:s4s,
+      value:c.s4score, unit:'/ 4 项达标',
+      sub:'季度亏损 '+last.loss.toFixed(0)+' 亿 · 头部能繁 '+last.headMom.toFixed(1)+'%',
+      items:c.s4items.map(function(x){ return {t:x.t, vv:x.vv, ok:x.ok}; }),
+      say:'小猪场退出是休假，大集团退出是辞职。辞了才叫永久去产能。',
+      series: weeks.map(function(w,i){ return compute(w,i).s4score; }), color:'#0f766e'
+    },
+    {
+      i:'信号 ⑤', n:'期货与股票', s:s5s,
+      value:(c.basis>0?'+':'')+c.basis.toFixed(0), unit:'元/吨 远-近月',
+      sub:'远月 '+last.ffar.toFixed(0)+' · 超额 '+(last.eq>0?'+':'')+last.eq.toFixed(1)+'%',
+      items:c.s5items.map(function(x){ return {t:x.t, vv:x.vv, ok:x.ok}; }),
+      say:'聪明钱先投票。现在还在贴水平水，市场不信明年会缺猪。',
+      series: weeks.map(function(w){ return w.ffar - w.fnear; }), color:'#6b7280'
+    },
+    {
+      i:'信号 ⑥', n:'牧原现金成本 / 猪价', s:s6s,
+      value:c.cr.toFixed(3), unit:'倍',
+      sub:'现金成本 '+c.cash.toFixed(2)+' ÷ 猪价 '+last.pig.toFixed(2),
+      items:[
+        {t:'完全成本', vv:last.cost.toFixed(2)+' 元/kg'},
+        {t:'折旧摊销占比', vv:last.dep.toFixed(0)+'%'},
+        {t:'现金成本', vv:c.cash.toFixed(2)+' 元/kg'},
+        {t:'行业平均完全成本', vv:HEAD_COST.toFixed(1)+' 元/kg'}
+      ],
+      say:'成本最优的企业都在现金亏损，说明全行业靠流血出清，靠价格自救已经失效。',
+      series: weeks.map(function(w){ return (w.cost*(1-w.dep/100))/w.pig; }), color:'#b3261e'
+    }
+  ];
+
+  document.getElementById('cards').innerHTML = cards.map(function(k){
+    const cls = k.s.cls==='danger'?'st-danger':(k.s.cls==='ok'?'st-ok':(k.s.cls==='warn'?'st-warn':'st-idle'));
+    const pill = k.s.cls==='danger'?'p-danger':(k.s.cls==='ok'?'p-ok':(k.s.cls==='warn'?'p-warn':'p-idle'));
+    return '<article class="card '+cls+'">'
+      + '<div class="top"><div><div class="idx">'+k.i+'</div><div class="name">'+k.n+'</div></div>'
+      + '<span class="pill '+pill+'">'+k.s.txt+'</span></div>'
+      + '<div class="val"><span class="n mono">'+k.value+'</span><span class="u">'+k.unit+'</span></div>'
+      + '<div class="sub">'+k.sub+'</div>'
+      + '<ul>'+k.items.map(function(x){
+          return '<li><span>'+x.t+'</span><span class="v">'+x.vv
+            + '<span class="mk '+(x.ok===true?'y':'n')+'">'+(x.ok===true?'●':(x.ok===false?'○':''))+'</span></span></li>';
+        }).join('')+'</ul>'
+      + '<div class="foot"><span class="say">'+k.say+'</span>'+spark(k.series, k.color, 108, 34)+'</div>'
+      + '</article>';
+  }).join('');
+
+  /* 矩阵 */
+  const tg = function(cls, txt){
+    const m = {ok:'t-ok', warn:'t-warn', danger:'t-danger', idle:'t-idle'};
+    return '<span class="tag '+(m[cls]||'t-idle')+'">'+txt+'</span>';
+  };
+  document.getElementById('matrix').innerHTML =
+    '<thead><tr><th>#</th><th>信号</th><th>量化口径</th><th>本周读数</th><th>触发阈值</th><th>状态</th><th>仓位含义</th></tr></thead><tbody>'
+    + '<tr><td>①</td><td>有效存栏</td><td>能繁 × PSY / 20</td><td class="num">'+c.eff.toFixed(0)+' 万头</td><td>&lt; 3750 连续 2 月</td><td>'+tg(s1s.cls,s1s.txt)+'</td><td>观察</td></tr>'
+    + '<tr><td>②</td><td>存栏与淘汰</td><td>环比 · 同比 · 仔猪价 · 淘汰折价</td><td class="num">'+c.s2items.filter(x=>x.ok).length+'/4</td><td>≥ 2 项成立</td><td>'+tg(s2s.cls,s2s.txt)+'</td><td>试仓 20–30%</td></tr>'
+    + '<tr><td>③</td><td>猪粮比</td><td>活猪 ÷ 玉米</td><td class="num">'+c.pg.toFixed(2)+'</td><td>&lt; 5 且启动收储</td><td>'+tg(s3s.cls,s3s.txt)+'</td><td>只托底</td></tr>'
+    + '<tr><td>④</td><td>头部出清</td><td>亏损 · 头部能繁 · capex · 跑道</td><td class="num">'+c.s4score+'/4</td><td>≥ 2 项成立</td><td>'+tg(s4s.cls,s4s.txt)+'</td><td>加仓 50–60%</td></tr>'
+    + '<tr><td>⑤</td><td>期货与股票</td><td>升水 · 远月绝对价 · 持仓 · 超额</td><td class="num">'+c.s5items.filter(x=>x.ok).length+'/4</td><td>升水≥800 + 远月≥14000</td><td>'+tg(s5s.cls,s5s.txt)+'</td><td>右侧加满</td></tr>'
+    + '<tr><td>⑥</td><td>牧原现金成本比</td><td>(完全成本 − 折旧摊销) ÷ 猪价</td><td class="num">'+c.cr.toFixed(3)+'</td><td>&gt; 1.00 现金亏损</td><td>'+tg(s6s.cls,s6s.txt)+'</td><td>底部深度</td></tr>'
+    + '</tbody>';
+
+  /* 表单 */
+  if(!document.getElementById('form').dataset.built){
+    buildForm();
+    document.getElementById('form').dataset.built = '1';
+  }
+
+  /* 历史表 */
+  document.getElementById('history').innerHTML =
+    '<thead><tr><th>周</th><th>活猪</th><th>猪粮比</th><th>能繁</th><th>有效存栏</th><th>仔猪</th><th>折价</th><th>现金成本比</th><th>升水</th><th>出清</th><th>备注</th></tr></thead><tbody>'
+    + weeks.slice().reverse().map(function(w){
+        const ci = weeks.indexOf(w);
+        const cc = compute(w, ci);
+        return '<tr><td class="mono">'+w.d+'</td>'
+          + '<td class="num">'+w.pig.toFixed(2)+'</td>'
+          + '<td class="num">'+cc.pg.toFixed(2)+'</td>'
+          + '<td class="num">'+w.sow.toFixed(0)+'</td>'
+          + '<td class="num">'+cc.eff.toFixed(0)+'</td>'
+          + '<td class="num">'+w.piglet.toFixed(1)+'</td>'
+          + '<td class="num">'+cc.disc.toFixed(0)+'%</td>'
+          + '<td class="num">'+cc.cr.toFixed(3)+'</td>'
+          + '<td class="num">'+((w.ffar-w.fnear)>0?'+':'')+(w.ffar-w.fnear).toFixed(0)+'</td>'
+          + '<td class="num">'+cc.s4score+'/4</td>'
+          + '<td style="white-space:normal;min-width:120px;color:#8b938d">'+esc(w.note||'')+'</td></tr>';
+      }).join('')
+    + '</tbody>';
+}
+
+/* 主图：猪价 vs 现金成本 */
+function mainChart(){
+  const W=1000,H=260, L=52,R=18,T=16,B=34;
+  const pigs = weeks.map(function(w){return w.pig;});
+  const costs = weeks.map(function(w){return w.cost*(1-w.dep/100);});
+  const all = pigs.concat(costs);
+  let mn = Math.min.apply(null,all), mx = Math.max.apply(null,all);
+  mn = Math.floor(mn*2)/2 - 0.5; mx = Math.ceil(mx*2)/2 + 0.5;
+  const px = function(i){ return L + i*((W-L-R)/(weeks.length-1)); };
+  const py = function(v){ return T + (H-T-B)*(1-(v-mn)/(mx-mn)); };
+  const path = function(arr){
+    return arr.map(function(v,i){ return (i?'L':'M')+px(i).toFixed(1)+' '+py(v).toFixed(1); }).join(' ');
+  };
+  // 交叉区域填充：猪价 < 现金成本 的区间
+  let area = '';
+  for(let i=0;i<weeks.length-1;i++){
+    const a = pigs[i]-costs[i], b = pigs[i+1]-costs[i+1];
+    if(a<0 && b<0){
+      area += '<rect x="'+px(i).toFixed(1)+'" y="'+T+'" width="'+(px(i+1)-px(i)).toFixed(1)+'" height="'+(H-T-B)+'" fill="#fbeae8"/>';
+    }
+  }
+  // 网格与刻度
+  let grid='';
+  const stepY = (mx-mn)<=4?0.5:((mx-mn)<=8?1:2);
+  for(let v=mn; v<=mx+0.001; v+=stepY){
+    const y = py(v);
+    grid += '<line x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+(W-R)+'" y2="'+y.toFixed(1)+'" stroke="#eef0ed"/>'
+      + '<text x="'+(L-8)+'" y="'+(y+4).toFixed(1)+'" font-size="10" fill="#8b938d" text-anchor="end">'+v.toFixed(1)+'</text>';
+  }
+  let xl='';
+  weeks.forEach(function(w,i){
+    if(i%2===0){
+      xl += '<text x="'+px(i).toFixed(1)+'" y="'+(H-12)+'" font-size="10" fill="#8b938d" text-anchor="middle">'+w.d.slice(5)+'</text>';
+    }
+  });
+  return grid + area
+    + '<path d="'+path(costs)+'" fill="none" stroke="#b3261e" stroke-width="2" stroke-dasharray="5 4"/>'
+    + '<path d="'+path(pigs)+'" fill="none" stroke="#171a18" stroke-width="2.4"/>'
+    + '<circle cx="'+px(weeks.length-1).toFixed(1)+'" cy="'+py(pigs[pigs.length-1]).toFixed(1)+'" r="4" fill="#171a18"/>'
+    + '<circle cx="'+px(weeks.length-1).toFixed(1)+'" cy="'+py(costs[costs.length-1]).toFixed(1)+'" r="4" fill="#b3261e"/>'
+    + xl
+    + '<g font-size="11">'
+    + '<rect x="'+(W-190)+'" y="10" width="10" height="10" fill="#171a18"/><text x="'+(W-175)+'" y="19" fill="#5b635e">活猪价</text>'
+    + '<rect x="'+(W-110)+'" y="10" width="10" height="10" fill="#b3261e"/><text x="'+(W-95)+'" y="19" fill="#5b635e">现金成本</text>'
+    + '</g>';
+}
+
+/* ============ 6. 表单 ============ */
+function buildForm(){
+  const last = weeks[weeks.length-1];
+  const groups = {};
+  FIELDS.forEach(function(f){ (groups[f.g] = groups[f.g]||[]).push(f); });
+  let html = '';
+  Object.keys(groups).forEach(function(g){
+    html += '<div class="fgroup"><h4>'+g+'</h4>';
+    groups[g].forEach(function(f){
+      html += '<div class="field"><label for="f_'+f.k+'">'+f.label+'</label>'
+        + '<input id="f_'+f.k+'" data-k="'+f.k+'" type="number" step="'+f.step+'" value="'+last[f.k]+'">'
+        + '<span class="un">'+f.unit+'</span></div>';
+    });
+    html += '</div>';
+  });
+  html += '<div class="fgroup"><h4>本周日期</h4>'
+    + '<div class="field"><label for="f_date">周标签</label><input id="f_date" type="date" value="'+nextDate()+'"><span class="un">周一</span></div>'
+    + '<p class="hint" style="margin:6px 0 0">建议每周一录入上一周（周一至周日）的实测均值。</p></div>';
+  document.getElementById('form').innerHTML = html;
+}
+function nextDate(){
+  const last = new Date(weeks[weeks.length-1].d+'T00:00:00');
+  last.setDate(last.getDate()+7);
+  return last.toISOString().slice(0,10);
+}
+
+document.getElementById('btnsave').addEventListener('click', function(){
+  const o = {d: document.getElementById('f_date').value || nextDate()};
+  FIELDS.forEach(function(f){
+    const el = document.getElementById('f_'+f.k);
+    o[f.k] = num(el.value);
+  });
+  if(!o.d){ alert('请填写周标签日期'); return; }
+  if(o.pig<=0 || o.corn<=0 || o.sow<=0 || o.cost<=0){ alert('价格、存栏、成本必须大于 0'); return; }
+  weeks.push(o);
+  save(); render();
+  document.getElementById('f_date').value = nextDate();
+  document.getElementById('savedhint').textContent = '已保存 ' + o.d + '，指标已重算';
+});
+
+document.getElementById('btnreset').addEventListener('click', function(){
+  if(!confirm('将丢弃本机录入数据，回到官方自动更新序列？')) return;
+  try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+  manualMode = false;
+  weeks = JSON.parse(JSON.stringify(SEED)); render(); buildForm();
+  document.getElementById('savedhint').textContent = '已回到官方自动更新序列';
+});
+
+document.getElementById('btnclear').addEventListener('click', function(){
+  if(!confirm('清空本机记录并回到官方自动更新序列？')) return;
+  try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+  manualMode = false;
+  weeks = JSON.parse(JSON.stringify(SEED)); render(); buildForm();
+});
+
+document.getElementById('btnexport').addEventListener('click', function(){
+  const head = 'week,'+FIELDS.map(function(f){return f.k;}).join(',')+',effStock,pigCorn,cullDisc,cashRatio,basis\n';
+  const rows = weeks.map(function(w){
+    const c = compute(w, weeks.indexOf(w));
+    return [w.d, FIELDS.map(function(f){return w[f.k];}).join(','),
+      c.eff.toFixed(1), c.pg.toFixed(2), c.disc.toFixed(1), c.cr.toFixed(3), (w.ffar-w.fnear)].join(',');
+  }).join('\n');
+  const blob = new Blob(['\ufeff'+head+rows], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '猪周期六信号_周度数据.csv';
+  a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);}, 2000);
+});
+
+document.getElementById('btncopy').addEventListener('click', function(){
+  const last = weeks[weeks.length-1];
+  const c = compute(last, weeks.length-1);
+  const s1=stateS1(c), s2=stateS2(c), s3=stateS3(c), s4=stateS4(c), s5=stateS5(c), s6=stateS6(c);
+  const txt = '【猪周期六信号 · '+last.d+'】\n'
+   + '活猪 '+last.pig.toFixed(2)+' 元/kg，猪粮比 '+c.pg.toFixed(2)+'（'+s3.txt+'）；\n'
+   + '能繁 '+last.sow.toFixed(0)+' 万头，PSY '+last.psy.toFixed(1)+'，有效存栏 '+c.eff.toFixed(0)+' 万头（'+s1.txt+'）；\n'
+   + '去化：环比 '+last.sowMom.toFixed(2)+'%、同比 '+last.sowYoy.toFixed(1)+'%、淘汰折价 '+c.disc.toFixed(0)+'%、仔猪 '+last.piglet.toFixed(1)+'（'+s2.txt+'）；\n'
+   + '头部出清 '+c.s4score+'/4（'+s4.txt+'）；期货远-近月 '+(c.basis>0?'+':'')+c.basis.toFixed(0)+' 元/吨（'+s5.txt+'）；\n'
+   + '牧原现金成本 '+c.cash.toFixed(2)+' 元/kg，成本/猪价 '+c.cr.toFixed(3)+'（'+s6.txt+'）。\n'
+   + '结论：右侧确认 ' + [s1,s2,s4,s5].filter(x=>x.cls==='ok').length + '/4，底部深度 ' + [s3,s6].filter(x=>x.cls==='danger').length + '/2。';
+  try{
+    navigator.clipboard.writeText(txt).then(function(){
+      document.getElementById('savedhint').textContent = '结论已复制到剪贴板';
+    });
+  }catch(e){
+    document.getElementById('savedhint').textContent = '复制失败，请手动选择文本';
+  }
+});
+
+/* ============ 7. 一键更新：粘贴文字自动识别 ============ */
+const RULES = [
+ {k:'pig',   re:[/活猪[^0-9]{0,16}(\d+\.\d+)\s*元/, /生猪[（(]?外三元[)）]?[^0-9]{0,16}(\d+\.\d+)\s*元/, /生猪均价[^0-9]{0,12}(\d+\.\d+)\s*元/]},
+ {k:'piglet',re:[/仔猪[^0-9]{0,16}(\d+\.\d+)\s*元/]},
+ {k:'corn',  re:[/玉米[^0-9]{0,16}(\d+\.\d+)\s*元/]},
+ {k:'cull',  re:[/淘汰母猪[^0-9]{0,16}(\d+\.\d+)\s*元/]},
+ {k:'cost',  re:[/完全成本[^0-9]{0,16}(\d+\.\d+)\s*元/]},
+ {k:'sow',   re:[/能繁母猪[^0-9]{0,20}(\d+(?:\.\d+)?)\s*万头/]},
+ {k:'psy',   re:[/PSY[^0-9]{0,12}(\d+(?:\.\d+)?)/i]},
+ {k:'sowMom',re:[/能繁[^0-9]{0,14}环比[^0-9\-]{0,10}(-?\d+(?:\.\d+)?)\s*%/]},
+ {k:'sowYoy',re:[/能繁[^0-9]{0,14}同比[^0-9\-]{0,10}(-?\d+(?:\.\d+)?)\s*%/]},
+ {k:'fnear', re:[/近月[^0-9]{0,18}(\d{4,6})\s*元/]},
+ {k:'ffar',  re:[/远月(?!持仓)[^0-9]{0,18}(\d{4,6})\s*元/]},
+ {k:'foi',   re:[/远月持仓[^0-9]{0,12}(\d+(?:\.\d+)?)\s*(万)?手/]},
+ {k:'eq',    re:[/超额收益?[^0-9\-]{0,12}(-?\d+(?:\.\d+)?)\s*%/]},
+ {k:'loss',  re:[/亏[^0-9]{0,10}(\d+(?:\.\d+)?)\s*亿/], neg:true},
+ {k:'headMom',re:[/头部[^0-9]{0,20}能繁[^0-9\-]{0,12}(-?\d+(?:\.\d+)?)\s*%/]},
+ {k:'capex', re:[/资本开支[^0-9\-]{0,14}(-?\d+(?:\.\d+)?)\s*%/]},
+ {k:'runway',re:[/现金跑道[^0-9]{0,12}(\d+(?:\.\d+)?)\s*个?月/]},
+ {k:'dep',   re:[/折旧摊销[^0-9]{0,14}(\d+(?:\.\d+)?)\s*%/]}
+];
+function normText(t){
+  return String(t||'')
+    .replace(/[−–—]/g,'-').replace(/％/g,'%').replace(/：/g,':')
+    .replace(/[０-９]/g, function(c){ return String.fromCharCode(c.charCodeAt(0)-0xFEE0); })
+    .replace(/，/g,',').replace(/\s+/g,' ');
+}
+function parseText(t){
+  const s = normText(t), out = {};
+  RULES.forEach(function(r){
+    for(let i=0;i<r.re.length;i++){
+      const m = s.match(r.re[i]);
+      if(m){
+        let v = parseFloat(m[1]);
+        if(r.neg) v = -Math.abs(v);
+        if(r.k==='foi' && m[2]==='万') v = v*10000;
+        out[r.k] = v; break;
+      }
+    }
+  });
+  return out;
+}
+
+document.getElementById('btnupdate').addEventListener('click', function(){
+  const p = document.getElementById('updatepanel');
+  const open = p.style.display !== 'none';
+  p.style.display = open ? 'none' : 'block';
+  if(!open){ buildForm(); p.scrollIntoView({behavior:'smooth', block:'start'}); }
+});
+
+document.getElementById('btnparse').addEventListener('click', function(){
+  const txt = document.getElementById('pastetext').value;
+  if(!txt.trim()){ document.getElementById('parsehint').textContent = '先粘贴一段行情文字'; return; }
+  buildForm();
+  const res = parseText(txt);
+  FIELDS.forEach(function(f){
+    const el = document.getElementById('f_'+f.k);
+    if(res[f.k] !== undefined){ el.value = res[f.k]; el.style.borderColor = '#0f766e'; el.style.background = '#e6f2ef'; }
+    else { el.style.borderColor = ''; el.style.background = ''; }
+  });
+  document.getElementById('f_date').value = nextDate();
+  document.getElementById('chips').innerHTML = FIELDS.map(function(f){
+    const hit = res[f.k] !== undefined;
+    return '<span class="chip '+(hit?'hit':'')+'">'+f.label+' '+(hit?res[f.k]:'沿用上周')+'</span>';
+  }).join('');
+  document.getElementById('parsehint').textContent =
+    '识别到 '+Object.keys(res).length+' / '+FIELDS.length+' 项，其余沿用上周，请下拉核对后点「保存并重算」';
+});
+
+document.getElementById('btnfilldemo').addEventListener('click', function(){
+  document.getElementById('pastetext').value =
+    '据农业农村部对500个县集贸市场监测，上周全国活猪价格为9.81元/公斤，环比跌3.0%；仔猪价格21.5元/公斤；'
+  + '玉米价格2.36元/公斤；淘汰母猪价格7.1元/公斤。全国能繁母猪存栏3850万头，能繁环比-0.20%，能繁同比-3.8%，'
+  + '行业PSY约22.8头。生猪期货近月合约10840元/吨，远月合约11300元/吨，远月持仓4920手。'
+  + '养殖板块相对沪深300超额收益-7.6%。上市猪企季度合计亏损95亿元，头部企业能繁环比-4.5%，'
+  + '资本开支同比-35%，现金跑道9.1个月。牧原10月完全成本11.4元/公斤，折旧摊销占比10%。';
+});
+
+render();
+</script>
+</body>
+</html>

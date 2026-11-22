@@ -83,6 +83,8 @@ header{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content
 .val .n{font-size:30px;font-weight:650;letter-spacing:-.02em;line-height:1.1}
 .val .u{font-size:12px;color:var(--ink3)}
 .sub{margin-top:2px;font-size:12px;color:var(--ink2)}
+.extra{margin-top:5px;font-size:11.5px;line-height:1.55;color:var(--ink3);border-left:2px solid var(--line);padding-left:7px}
+.gn{margin:2px 0 8px;font-size:11.5px;line-height:1.55;color:var(--ink3)}
 .card ul{margin:10px 0 0;padding:0;list-style:none;border-top:1px dashed var(--line);padding-top:9px}
 .card li{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:2px 0;color:var(--ink2)}
 .card li .v{font-weight:600;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -247,7 +249,8 @@ footer b{color:var(--ink2);font-weight:600}
 <footer>
   <p><b>口径</b>：活猪价＝农业农村部 500 个县集贸市场活猪（中等）周度均价，元/公斤；玉米价＝农业农村部 CASDE 年度均价折月；仔猪价＝7kg 仔猪；淘汰母猪折价＝淘汰母猪价 ÷ 活猪价。能繁存栏用国家统计局季度末数据，期内按月度环比外推；PSY 取行业公开的规模场均值。</p>
   <p><b>牧原现金成本</b>：完全成本 − 折旧摊销。折旧摊销等非现金成本约占完全成本 10%（公司披露口径），故现金成本 ≈ 完全成本 × 0.90。完全成本取公司月度披露值。</p>
-  <p><b>头部财务</b>：季度亏损＝A 股主要上市猪企归母净利合计；资本开支同比＝现金流量表「购建固定资产等支付的现金」同比；现金跑道＝货币资金 ÷ 月均经营现金净流出。</p>
+  <p><b>头部财务</b>：样本按年出栏量取 A 股生猪养殖前 9 家 —— 牧原股份(002714)、温氏股份(300498)、新希望(000876)、天邦食品(002124)、大北农(002385)、唐人神(002567)、巨星农牧(603477)、神农集团(605296)、华统股份(002840)，合并报表口径、控股子公司不重复计入。季度亏损＝各家「归母净利」单季加总；资本开支同比＝现金流量表「购建固定资产、无形资产和其他长期资产支付的现金」单季同比；现金跑道＝货币资金 ÷ 月均经营现金净流出（经营现金流为正的公司记「不适用」）。其中「头部能繁环比」只取稳定披露能繁存栏的前 5 家（牧原 · 温氏 · 新希望 · 天邦 · 巨星），季报环比需除以 3 折成月。</p>
+  <p><b>期货口径</b>：生猪期货合约月份只有 1、3、5、7、9、11 月。<b>近月</b>＝距当前最近且仍有充足成交的合约（本期 2027-01，LH2701）；<b>远月</b>＝主力之后第 6–8 个月、流动性尚可的合约（本期 2027-09，LH2709）。升水＝远月价 − 近月价；持仓取远月合约单边持仓；养殖股超额＝养殖板块指数相对沪深300 的超额收益。每月滚动更新时按上述规则顺延合约，不做跨合约拼接。</p>
   <p><b>说明</b>：本页为个人研究用的观测台账，不构成投资建议。历史序列中标注「示例」的周为按月度均价插值补全，请以每周录入的实测值为准。</p>
 </footer>
 
@@ -265,8 +268,8 @@ const FIELDS = [
   {k:'psy',    label:'行业PSY',       unit:'头',    step:0.1,  g:'产能'},
   {k:'sowMom', label:'能繁月环比',    unit:'%',     step:0.01, g:'产能'},
   {k:'sowYoy', label:'能繁同比',      unit:'%',     step:0.1,  g:'产能'},
-  {k:'fnear',  label:'期货近月',      unit:'元/吨', step:10,   g:'期货与股票'},
-  {k:'ffar',   label:'期货远月',      unit:'元/吨', step:10,   g:'期货与股票'},
+  {k:'fnear',  label:'期货近月合约价', unit:'元/吨', step:10,   g:'期货与股票'},
+  {k:'ffar',   label:'期货远月合约价', unit:'元/吨', step:10,   g:'期货与股票'},
   {k:'foi',    label:'远月持仓',      unit:'手',    step:100,  g:'期货与股票'},
   {k:'eq',     label:'养殖股超额',    unit:'%',     step:0.1,  g:'期货与股票'},
   {k:'loss',   label:'上市猪企季度亏损', unit:'亿元', step:1,  g:'头部财务'},
@@ -281,6 +284,29 @@ const HEAD_COST = 13.0;     // 行业平均完全成本，元/kg
 const SOW_NORMAL = 3750;    // 新口径正常保有量，万头
 const SOW_OLD = 4100;       // 2021 版口径
 const BASELINE_PSY = 20;    // 折算基准
+
+/* —— 信号④「头部」样本名单：按年出栏量取 A 股生猪养殖上市公司的前 9 家（合并报表口径，控股子公司不重复计入）—— */
+const HEAD_LIST = [
+  {n:'牧原股份', c:'002714'},
+  {n:'温氏股份', c:'300498'},
+  {n:'新希望',   c:'000876'},
+  {n:'天邦食品', c:'002124'},
+  {n:'大北农',   c:'002385'},
+  {n:'唐人神',   c:'002567'},
+  {n:'巨星农牧', c:'603477'},
+  {n:'神农集团', c:'605296'},
+  {n:'华统股份', c:'002840'}
+];
+/* 其中「头部能繁环比」只取稳定披露能繁存栏的前 5 家 */
+const HEAD_TOP = ['牧原','温氏','新希望','天邦','巨星'].join(' · ');
+
+/* —— 信号⑤ 合约口径：生猪期货合约月份只有 1/3/5/7/9/11 月 ——
+   近月 = 距当前最近、仍有充足成交的合约；远月 = 主力之后第 6–8 个月、流动性尚可的合约。
+   每月滚动更新时，改下面两行即可。 */
+const NEAR_CONTRACT = 'LH2701';
+const FAR_CONTRACT  = 'LH2709';
+const NEAR_DESC = '2027 年 1 月交割，最近活跃月';
+const FAR_DESC  = '2027 年 9 月交割，主力之后第 8 个月';
 
 /* 示例序列：按月度均价插值补全，最后一行为实测口径（11/9-15 活猪 9.81） */
 const SEED = [
@@ -524,6 +550,8 @@ function render(){
       i:'信号 ④', n:'头部出清', s:s4s,
       value:c.s4score, unit:'/ 4 项达标',
       sub:'季度亏损 '+last.loss.toFixed(0)+' 亿 · 头部能繁 '+last.headMom.toFixed(1)+'%',
+      extra:'样本（A 股出栏前 9）：'+HEAD_LIST.map(function(x){ return x.n+' '+x.c; }).join(' · ')
+        + '。亏损＝各公司归母净利单季合计；capex＝现金流量表「购建固定资产等支付的现金」单季同比；跑道＝货币资金 ÷ 月均经营现金净流出（经营现金流为正记「不适用」）。头部能繁仅取 '+HEAD_TOP+'。',
       items:c.s4items.map(function(x){ return {t:x.t, vv:x.vv, ok:x.ok}; }),
       say:'小猪场退出是休假，大集团退出是辞职。辞了才叫永久去产能。',
       series: weeks.map(function(w,i){ return compute(w,i).s4score; }), color:'#0f766e'
@@ -532,7 +560,11 @@ function render(){
       i:'信号 ⑤', n:'期货与股票', s:s5s,
       value:(c.basis>0?'+':'')+c.basis.toFixed(0), unit:'元/吨 远-近月',
       sub:'远月 '+last.ffar.toFixed(0)+' · 超额 '+(last.eq>0?'+':'')+last.eq.toFixed(1)+'%',
-      items:c.s5items.map(function(x){ return {t:x.t, vv:x.vv, ok:x.ok}; }),
+      extra:'近月＝'+NEAR_CONTRACT+'（'+NEAR_DESC+'，'+last.fnear.toFixed(0)+' 元/吨）　远月＝'+FAR_CONTRACT+'（'+FAR_DESC+'，'+last.ffar.toFixed(0)+' 元/吨）。升水＝远月 − 近月；持仓取远月合约单边持仓；超额＝养殖板块指数相对沪深300 的超额收益。',
+      items:[
+        {t:'近月合约', vv:NEAR_CONTRACT},
+        {t:'远月合约', vv:FAR_CONTRACT}
+      ].concat(c.s5items.map(function(x){ return {t:x.t, vv:x.vv, ok:x.ok}; })),
       say:'聪明钱先投票。现在还在贴水平水，市场不信明年会缺猪。',
       series: weeks.map(function(w){ return w.ffar - w.fnear; }), color:'#6b7280'
     },
@@ -559,6 +591,7 @@ function render(){
       + '<span class="pill '+pill+'">'+k.s.txt+'</span></div>'
       + '<div class="val"><span class="n mono">'+k.value+'</span><span class="u">'+k.unit+'</span></div>'
       + '<div class="sub">'+k.sub+'</div>'
+      + (k.extra ? '<div class="extra">'+k.extra+'</div>' : '')
       + '<ul>'+k.items.map(function(x){
           return '<li><span>'+x.t+'</span><span class="v">'+x.vv
             + '<span class="mk '+(x.ok===true?'y':'n')+'">'+(x.ok===true?'●':(x.ok===false?'○':''))+'</span></span></li>';
@@ -577,8 +610,8 @@ function render(){
     + '<tr><td>①</td><td>有效存栏</td><td>能繁 × PSY / 20</td><td class="num">'+c.eff.toFixed(0)+' 万头</td><td>&lt; 3750 连续 2 月</td><td>'+tg(s1s.cls,s1s.txt)+'</td><td>观察</td></tr>'
     + '<tr><td>②</td><td>存栏与淘汰</td><td>环比 · 同比 · 仔猪价 · 淘汰折价</td><td class="num">'+c.s2items.filter(x=>x.ok).length+'/4</td><td>≥ 2 项成立</td><td>'+tg(s2s.cls,s2s.txt)+'</td><td>试仓 20–30%</td></tr>'
     + '<tr><td>③</td><td>猪粮比</td><td>活猪 ÷ 玉米</td><td class="num">'+c.pg.toFixed(2)+'</td><td>&lt; 5 且启动收储</td><td>'+tg(s3s.cls,s3s.txt)+'</td><td>只托底</td></tr>'
-    + '<tr><td>④</td><td>头部出清</td><td>亏损 · 头部能繁 · capex · 跑道</td><td class="num">'+c.s4score+'/4</td><td>≥ 2 项成立</td><td>'+tg(s4s.cls,s4s.txt)+'</td><td>加仓 50–60%</td></tr>'
-    + '<tr><td>⑤</td><td>期货与股票</td><td>升水 · 远月绝对价 · 持仓 · 超额</td><td class="num">'+c.s5items.filter(x=>x.ok).length+'/4</td><td>升水≥800 + 远月≥14000</td><td>'+tg(s5s.cls,s5s.txt)+'</td><td>右侧加满</td></tr>'
+    + '<tr><td>④</td><td>头部出清</td><td>亏损 · 头部能繁 · capex · 跑道（A 股前 9 家）</td><td class="num">'+c.s4score+'/4</td><td>≥ 2 项成立</td><td>'+tg(s4s.cls,s4s.txt)+'</td><td>加仓 50–60%</td></tr>'
+    + '<tr><td>⑤</td><td>期货与股票</td><td>升水 · 远月绝对价 · 持仓 · 超额（'+NEAR_CONTRACT+' vs '+FAR_CONTRACT+'）</td><td class="num">'+c.s5items.filter(x=>x.ok).length+'/4</td><td>升水≥800 + 远月≥14000</td><td>'+tg(s5s.cls,s5s.txt)+'</td><td>右侧加满</td></tr>'
     + '<tr><td>⑥</td><td>牧原现金成本比</td><td>(完全成本 − 折旧摊销) ÷ 猪价</td><td class="num">'+c.cr.toFixed(3)+'</td><td>&gt; 1.00 现金亏损</td><td>'+tg(s6s.cls,s6s.txt)+'</td><td>底部深度</td></tr>'
     + '</tbody>';
 
@@ -664,6 +697,12 @@ function buildForm(){
   let html = '';
   Object.keys(groups).forEach(function(g){
     html += '<div class="fgroup"><h4>'+g+'</h4>';
+    if(g==='期货与股票'){
+      html += '<p class="gn">近月填 '+NEAR_CONTRACT+'（'+NEAR_DESC+'），远月填 '+FAR_CONTRACT+'（'+FAR_DESC+'）；持仓填远月合约单边持仓。</p>';
+    }
+    if(g==='头部财务'){
+      html += '<p class="gn">样本：'+HEAD_LIST.map(function(x){ return x.n; }).join('、')+'。亏损＝归母净利单季合计（亿元，亏损填负数）；能繁环比＝季报环比÷3 折月；capex＝购建固定资产等支付的现金单季同比；跑道＝货币资金 ÷ 月均经营现金净流出。</p>';
+    }
     groups[g].forEach(function(f){
       html += '<div class="field"><label for="f_'+f.k+'">'+f.label+'</label>'
         + '<input id="f_'+f.k+'" data-k="'+f.k+'" type="number" step="'+f.step+'" value="'+last[f.k]+'">'

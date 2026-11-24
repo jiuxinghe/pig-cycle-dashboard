@@ -310,22 +310,21 @@ const FAR_DESC  = '2027 年 9 月交割，主力之后第 8 个月';
 
 /* 示例序列：按月度均价插值补全，最后一行为实测口径（11/9-15 活猪 9.81） */
 const SEED = [
-  {d:'2026-08-24',pig:12.18,corn:2.36,piglet:24.8,cull:8.6, sow:3912,psy:22.7,sowMom:-0.28,sowYoy:-2.9, fnear:11720,ffar:12140,foi:6820,eq:-3.2, loss:-70,headMom:-1.6,capex:-18,runway:11, cost:11.9,dep:10.0},
-  {d:'2026-09-07',pig:12.05,corn:2.36,piglet:24.4,cull:8.5, sow:3902,psy:22.7,sowMom:-0.26,sowYoy:-3.1, fnear:11640,ffar:12080,foi:6610,eq:-4.1, loss:-82,headMom:-2.0,capex:-22,runway:10.5,cost:11.8,dep:10.0},
-  {d:'2026-09-14',pig:12.01,corn:2.36,piglet:24.1,cull:8.5, sow:3896,psy:22.7,sowMom:-0.25,sowYoy:-3.3, fnear:11600,ffar:12020,foi:6480,eq:-4.8, loss:-88,headMom:-2.4,capex:-24,runway:10.2,cost:11.7,dep:10.0},
-  {d:'2026-09-21',pig:11.98,corn:2.36,piglet:23.9,cull:8.4, sow:3890,psy:22.8,sowMom:-0.25,sowYoy:-3.4, fnear:11540,ffar:11940,foi:6240,eq:-5.3, loss:-95,headMom:-2.9,capex:-27,runway:10.0,cost:11.6,dep:10.0},
-  {d:'2026-09-28',pig:11.92,corn:2.36,piglet:23.4,cull:8.3, sow:3884,psy:22.8,sowMom:-0.24,sowYoy:-3.5, fnear:11480,ffar:11860,foi:6010,eq:-5.9, loss:-95,headMom:-3.3,capex:-29,runway:9.8, cost:11.5,dep:10.0},
-  {d:'2026-10-05',pig:11.74,corn:2.36,piglet:23.0,cull:8.2, sow:3878,psy:22.8,sowMom:-0.24,sowYoy:-3.5, fnear:11380,ffar:11760,foi:5760,eq:-6.2, loss:-95,headMom:-3.6,capex:-31,runway:9.6, cost:11.5,dep:10.0},
-  {d:'2026-10-12',pig:11.60,corn:2.36,piglet:22.7,cull:8.2, sow:3873,psy:22.8,sowMom:-0.23,sowYoy:-3.6, fnear:11260,ffar:11640,foi:5480,eq:-6.6, loss:-95,headMom:-3.9,capex:-32,runway:9.5, cost:11.4,dep:10.0},
-  {d:'2026-10-19',pig:11.45,corn:2.36,piglet:22.5,cull:8.1, sow:3868,psy:22.8,sowMom:-0.22,sowYoy:-3.6, fnear:11160,ffar:11560,foi:5210,eq:-7.0, loss:-95,headMom:-4.2,capex:-33,runway:9.4, cost:11.4,dep:10.0},
-  {d:'2026-10-26',pig:11.16,corn:2.36,piglet:22.1,cull:8.0, sow:3863,psy:22.8,sowMom:-0.22,sowYoy:-3.7, fnear:11060,ffar:11480,foi:4980,eq:-7.4, loss:-95,headMom:-4.4,capex:-34,runway:9.3, cost:11.4,dep:10.0},
-  {d:'2026-11-02',pig:10.11,corn:2.36,piglet:21.8,cull:7.4, sow:3858,psy:22.8,sowMom:-0.21,sowYoy:-3.7, fnear:10920,ffar:11360,foi:4760,eq:-7.8, loss:-95,headMom:-4.5,capex:-35,runway:9.2, cost:11.4,dep:10.0},
-  {d:'2026-11-09',pig:9.81, corn:2.36,piglet:21.5,cull:7.1, sow:3854,psy:22.8,sowMom:-0.20,sowYoy:-3.8, fnear:10840,ffar:11300,foi:4810,eq:-8.0, loss:-95,headMom:-4.5,capex:-35,runway:9.1, cost:11.4,dep:10.0, note:'活猪为农业农村部500县实测，其余沿用月度值'},
-  {d:'2026-11-16',pig:9.95, corn:2.36,piglet:21.9,cull:7.2, sow:3850,psy:22.8,sowMom:-0.20,sowYoy:-3.8, fnear:10880,ffar:11360,foi:4920,eq:-7.6, loss:-95,headMom:-4.5,capex:-35,runway:9.1, cost:11.4,dep:10.0, note:'占位，待自动更新替换'}
+  {d:'2026-08-24',pig:12.18,corn:2.36,piglet:24.8,cull:8.6, sow:3912,psy:22.7,sowMom:-0.28,sowYoy:-2.9, fnear:12640,ffar:13860,foi:18087,eq:-3.2, loss:-70,headMom:-1.6,capex:-18,runway:11, cost:11.9,dep:10.0, note:'期货远月暂以 LH2707 结算价替代'},
+  {d:'2026-09-07',pig:12.05,corn:2.36,piglet:24.4,cull:8.5, sow:3902,psy:22.7,sowMom:-0.26,sowYoy:-3.1, fnear:12250,ffar:13920,foi:30045,eq:-4.1, loss:-82,headMom:-2.0,capex:-22,runway:10.5,cost:11.8,dep:10.0, note:'期货远月暂以 LH2707 结算价替代'},
+  {d:'2026-09-14',pig:12.01,corn:2.36,piglet:24.1,cull:8.5, sow:3896,psy:22.7,sowMom:-0.25,sowYoy:-3.3, fnear:11820,ffar:13255,foi:31863,eq:-4.8, loss:-88,headMom:-2.4,capex:-24,runway:10.2,cost:11.7,dep:10.0, note:'期货远月暂以 LH2707 结算价替代'},
+  {d:'2026-09-21',pig:11.98,corn:2.36,piglet:23.9,cull:8.4, sow:3890,psy:22.8,sowMom:-0.25,sowYoy:-3.4, fnear:11680,ffar:13325,foi:32874,eq:-5.3, loss:-95,headMom:-2.9,capex:-27,runway:10.0,cost:11.6,dep:10.0, note:'期货远月暂以 LH2707 结算价替代'},
+  {d:'2026-09-28',pig:11.92,corn:2.36,piglet:23.4,cull:8.3, sow:3884,psy:22.8,sowMom:-0.24,sowYoy:-3.5, fnear:11325,ffar:13745,foi:8787, eq:-5.9, loss:-95,headMom:-3.3,capex:-29,runway:9.8, cost:11.5,dep:10.0, note:'期货取 9-30 结算价（十一休市）'},
+  {d:'2026-10-05',pig:11.74,corn:2.36,piglet:23.0,cull:8.2, sow:3878,psy:22.8,sowMom:-0.24,sowYoy:-3.5, fnear:11250,ffar:13675,foi:12809,eq:-6.2, loss:-95,headMom:-3.6,capex:-31,runway:9.6, cost:11.5,dep:10.0},
+  {d:'2026-10-12',pig:11.60,corn:2.36,piglet:22.7,cull:8.2, sow:3873,psy:22.8,sowMom:-0.23,sowYoy:-3.6, fnear:10475,ffar:12850,foi:23989,eq:-6.6, loss:-95,headMom:-3.9,capex:-32,runway:9.5, cost:11.4,dep:10.0},
+  {d:'2026-10-19',pig:11.45,corn:2.36,piglet:22.5,cull:8.1, sow:3868,psy:22.8,sowMom:-0.22,sowYoy:-3.6, fnear:9850, ffar:12995,foi:34341,eq:-7.0, loss:-95,headMom:-4.2,capex:-33,runway:9.4, cost:11.4,dep:10.0},
+  {d:'2026-10-26',pig:11.16,corn:2.36,piglet:22.1,cull:8.0, sow:3863,psy:22.8,sowMom:-0.22,sowYoy:-3.7, fnear:9530, ffar:12825,foi:37527,eq:-7.4, loss:-95,headMom:-4.4,capex:-34,runway:9.3, cost:11.4,dep:10.0},
+  {d:'2026-11-02',pig:10.11,corn:2.36,piglet:21.8,cull:7.4, sow:3858,psy:22.8,sowMom:-0.21,sowYoy:-3.7, fnear:9175, ffar:12345,foi:40103,eq:-7.8, loss:-95,headMom:-4.5,capex:-35,runway:9.2, cost:11.4,dep:10.0},
+  {d:'2026-11-09',pig:9.81, corn:2.36,piglet:21.5,cull:7.1, sow:3854,psy:22.8,sowMom:-0.20,sowYoy:-3.8, fnear:9865, ffar:12965,foi:43332,eq:-8.0, loss:-95,headMom:-4.5,capex:-35,runway:9.1, cost:11.4,dep:10.0, note:'活猪为农业农村部500县实测（11/9-15），期货为大商所11/13结算价'},
+  {d:'2026-11-16',pig:9.00, corn:2.36,piglet:21.9,cull:7.2, sow:3850,psy:22.8,sowMom:-0.20,sowYoy:-3.8, fnear:9495, ffar:12730,foi:42194,eq:-7.6, loss:-95,headMom:-4.5,capex:-35,runway:9.1, cost:11.4,dep:10.0, note:'活猪取统计局11月中旬生猪9.00（环比+3.4%），500县第3周周报未发布；期货为大商所11-20结算价；猪肉批发14.77；仔猪、淘汰、能繁、财报、成本沿用上一期'}
 ];
-
 const STORE_KEY = 'pig6_signals_v1';
-const AUTO_UPDATED = '2026-11-22';   // 定时任务每次重发时改写此行
+const AUTO_UPDATED = '2026-11-24';   // 定时任务每次重发时改写此行
 let manualMode = false;
 let weeks = load();
 
@@ -477,8 +476,8 @@ function render(){
   document.getElementById('note').innerHTML =
     (manualMode
       ? '<b>当前为本机手动数据</b>：你在本机保存过录入值，官方自动更新不会覆盖它。点下方「清空本地记录」即可回到自动更新序列。<br>'
-      : '<b>自动更新已开启</b>：每周二 10:20 由定时任务抓取上周官方数据并重发本页，网址不变。最近更新 <b>'+AUTO_UPDATED+'</b>。<br>')
-  + '<b>口径提示</b>：活猪实测锚点为 <b>2026-11-09~11-15 全国活猪 9.81 元/公斤</b>（农业农村部 500 县集贸市场，环比 −3.0%）；'
+      : '<b>自动更新已开启</b>：每周一至周五 18:10 由定时任务抓取当日行情与官方数据并重发本页，网址不变。最近更新 <b>'+AUTO_UPDATED+'</b>。<br>')
+  + '<b>口径提示</b>：活猪最新取值 <b>2026-11-16~11-22 生猪 9.00 元/公斤</b>（国家统计局 11 月中旬旬报，环比 +3.4%；农业农村部 500 县第 3 周周报尚未发布，发布后回填）；期货为 11-20 大商所真实结算价（此前各周已由示例值改为真实盘面）；'
   + '历史其余各周为示例插值，仅供把趋势跑通。能繁存栏为月度/季度披露、牧原成本为月度披露、头部财报为季度披露，未出新值时沿用上一期并在历史表备注。';
 
   /* 两个仪表 */
